@@ -13,12 +13,10 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+
 
 // Public Routes
-Route::get('/index', [HomeController::class, 'index'])->name('index');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
