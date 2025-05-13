@@ -9,25 +9,28 @@ use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
+    /**
+     * Affiche la page d'accueil avec les annonces filtrées.
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        $query = Post::query()->with(['author', 'images']);
+        $query = Post::query()
+            ->with(['author', 'images']);
 
-        // 🔒 Si l'utilisateur N'EST PAS superadmin, on filtre uniquement les posts actifs
-      
-        // 🔍 Application des filtres de recherche personnalisés
+        // 🔍 Appliquer les filtres de recherche
         $this->applySearchFilters($query, $request);
 
-        // ⏳ Exécution de la requête avec pagination
+        // ⏳ Récupérer les résultats avec pagination
         $posts = $query->latest()
-                       ->paginate(9)
-                       ->appends($request->query());
+            ->paginate(9)
+            ->appends($request->query());
 
+        // ⚙️ Renvoyer les données à la vue Inertia
         return Inertia::render('Index', [
             'posts' => $posts,
-            'filters' => $request->only('city', 'sector', 'type'),
+            'filters' => $request->only(['city', 'sector', 'type']),
             'searchParams' => $this->getSearchParams($request),
             'auth' => [
                 'user' => $user
@@ -35,50 +38,49 @@ class HomeController extends Controller
         ]);
     }
 
-
-
     /**
-     * Applique les filtres de recherche à la requête
+     * Applique les filtres de recherche à la requête.
      */
-    protected function applySearchFilters($query, Request $request)
+    protected function applySearchFilters($query, Request $request): void
     {
-        // Filtre par ville (recherche insensible à la casse)
+        // 📍 Filtre par ville (insensible à la casse)
         if ($request->filled('city')) {
-            $query->where('city', 'ilike', '%' . $request->city . '%');
+            $query->where('city', 'ILIKE', '%' . $request->city . '%');
         }
 
-        // Filtre par secteur/quartier
+        // 📍 Filtre par secteur (quartier)
         if ($request->filled('sector')) {
-            $query->where('sector', 'ilike', '%' . $request->sector . '%');
+            $query->where('sector', 'ILIKE', '%' . $request->sector . '%');
         }
 
-        // Filtre par type de bien
+        // 🏠 Filtre par type de bien
         if ($request->filled('type')) {
-            $query->whereIn('type', (array)$request->type);
+            $query->whereIn('type', (array) $request->type);
         }
 
-        // Filtre optionnel par prix
+        // 💰 Filtre par prix minimum
         if ($request->filled('min_price')) {
             $query->where('price', '>=', $request->min_price);
         }
 
+        // 💰 Filtre par prix maximum
         if ($request->filled('max_price')) {
             $query->where('price', '<=', $request->max_price);
         }
     }
 
     /**
-     * Prépare les paramètres de recherche pour la vue
+     * Prépare les paramètres de recherche à renvoyer à la vue.
      */
-    protected function getSearchParams(Request $request)
+    protected function getSearchParams(Request $request): array
     {
         return [
-            'city' => $request->city,
-            'sector' => $request->sector,
-            'type' => $request->type ?? '',
-            'min_price' => $request->min_price,
-            'max_price' => $request->max_price,
-            'sort_by' => $request->sort_by ?? 'newest'
+            'city'      => $request->get('city'),
+            'sector'    => $request->get('sector'),
+            'type'      => $request->get('type', ''),
+            'min_price' => $request->get('min_price'),
+            'max_price' => $request->get('max_price'),
+            'sort_by'   => $request->get('sort_by', 'newest'),
         ];
     }
 }
