@@ -12,8 +12,13 @@ use App\Http\Controllers\AdminChatController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+
+Route::get('/', function () {
+    return view('welcome');
+})->name('home');
+
 // Public Routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/index', [HomeController::class, 'index'])->name('index');
 
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
