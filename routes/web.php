@@ -16,7 +16,7 @@ use Inertia\Inertia;
 
 
 // Public Routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
